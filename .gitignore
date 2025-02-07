@@ -1,0 +1,9 @@
+/.lake
+*~
+\#*
+.#*
+*.lock
+.lake
+/build
+
+*.DS_Store

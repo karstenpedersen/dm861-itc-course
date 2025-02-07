@@ -1,0 +1,15 @@
+name = "itc-course"
+version = "0.1.0"
+defaultTargets = ["itc-course"]
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "leanprover/lean4:v4.17.0-rc1"
+
+[[lean_lib]]
+name = "ItcCourse"
+
+[[lean_exe]]
+name = "itc-course"
+root = "Main"
