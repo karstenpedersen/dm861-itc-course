@@ -17,7 +17,11 @@ Welcome to the GitHub repository for the course DM861 Concurrency Theory held at
     or ssh
 
     `git clone git@github.com:chords-project/itc-course.git`
-- Ensure that you are positioned within the `itc-course/` directory before proceeding to build the project using `lake`:
+- Enter the `itc-course/` directory.
+- Download available pre-compiled caches (this speeds up the next step, building):
+
+    `lake exe cache get`
+- Proceeding to building the project using `lake`:
 
     `lake build`
 - Building the project may take some time. Once the process is successfully completed, you can execute the code using the following command:
