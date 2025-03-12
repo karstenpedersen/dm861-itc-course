@@ -152,6 +152,7 @@ end FC
 /- The system in figure 1.3 -/
 namespace FCSym
 /- Axioms : flight connections between cities -/
+
 inductive Conn : City → City → Prop where
   | OR : Conn .Odense .Rome
   | RS : Conn .Rome .Sydney
@@ -270,3 +271,145 @@ theorem D_walk: FC.Walk a b → ∃ n, FCW.Walk a b n := by
     exact ih₂
 
 end StructuralInduction
+
+/- Chapter 1.4 Admissible and Derivable Rules -/
+namespace AdmissibleDerivable
+/- Axioms : flight connections between cities -/
+inductive Conn : City → City → Prop where
+  | OR : Conn .Odense .Rome
+  | RS : Conn .Rome .Sydney
+  | ST : Conn .Sydney .Tokyo
+  | TN : Conn .Tokyo .NewYork
+  | NR : Conn .NewYork .Rome
+
+/- The walk defined in the system in Figure 1.2 -/
+/- This is the same definition as shown in FC,
+   I duplicate the definition here for the ease of demonstrating
+   the proofs of derivable and admissible theorems. -/
+inductive Walk : City → City → Prop where
+  | dir : Conn A B →
+        --------------
+          Walk A B
+  | comp : Walk A B → Walk B C →
+        -------------------------
+                Walk A C
+
+/- The walk with step instead of comp defined in the system in Figure 1.6 -/
+inductive WalkStep : City → City → Prop where
+  | dir : Conn A B →
+        ---------------
+          WalkStep A B
+  | step : Conn A B → WalkStep B C →
+          ---------------------------
+                WalkStep A C
+
+-- Proposition 1.6
+theorem derivable : WalkStep A B → Walk A B := by
+  intro h
+  induction h
+  case dir h =>
+    apply Walk.dir
+    exact h
+  case step h₁ h₂ ih =>
+    apply Walk.comp
+    . apply Walk.dir
+      exact h₁
+    . exact ih
+
+-- Exercise 1.11
+theorem D_sn : WalkStep .Sydney .NewYork := by
+  -- try it :D
+  sorry
+
+-- Exercise 1.12
+inductive WalkStepAlt : City → City → Prop where
+  | dir : Conn A B →
+       -----------------
+        WalkStepAlt A B
+  | step_alt : WalkStepAlt A B → Conn B C →
+              ------------------------------
+                  WalkStepAlt A C
+
+theorem derivable_step_alt : WalkStepAlt A B → Walk A B := by
+  -- try it :D
+  sorry
+
+-- Exercise 1.13
+inductive WalkCompAlt : City → City → Prop where
+  | dir : Conn A B →
+       -----------------
+        WalkCompAlt A B
+  | comp_alt : WalkCompAlt A B → WalkCompAlt B C →
+              ------------------------------------
+                    WalkCompAlt A C
+
+theorem derivable_comp_alt : WalkCompAlt A B → Walk A B := by
+  -- try it :D
+  sorry
+
+-- Proposition 1.7
+theorem admissible_old_technique : Walk A B → WalkStep A B := by
+  intro h
+  induction h
+  case dir h =>
+    apply WalkStep.dir
+    exact h
+  case comp a b c h₁ h₂ ih₁ ih₂ =>
+    induction h₁
+    case dir h₁ =>
+      apply WalkStep.step
+      . exact h₁
+      . exact ih₂
+    case comp a' b' c' h₁' h₂' ih₁' ih₂' =>
+      -- we cannot apply the same technique, it dies out really soon
+      sorry
+
+theorem admissible' : WalkStep A B → WalkStep B C → WalkStep A C := by
+  intro h₁ h₂
+  induction h₁
+  case dir h₁' =>
+    apply WalkStep.step
+    . exact h₁'
+    . exact h₂
+  case step h₃ h₄ ih =>
+    have h₅ := ih h₂
+    apply WalkStep.step
+    . exact h₃
+    . exact h₅
+
+theorem admissible : Walk A B → WalkStep A B := by
+  intro h
+  induction h
+  case dir h =>
+    apply WalkStep.dir
+    exact h
+  case comp A B C h₁ h₂ ih₁ ih₂ =>
+    exact admissible' ih₁ ih₂
+
+-- Example 1.3
+theorem H : Walk .Odense .Tokyo := by
+  apply Walk.comp
+  . apply Walk.comp
+    . apply Walk.dir
+      exact Conn.OR
+    . apply Walk.dir
+      exact Conn.RS
+  . apply Walk.dir
+    exact Conn.ST
+
+-- By proposition 1.7, walk (Odense, Tokyo) is derivable in the system with the step rule.
+-- We can obtain F by applying the admissible rule.
+theorem F : WalkStep .Odense .Tokyo := by
+  exact admissible H
+
+-- Exercise 1.15
+-- Hint: this theorem is needed
+theorem admissible_step_alt' : Conn A B → WalkStepAlt B C → WalkStepAlt A C := by
+  -- try it :D
+  sorry
+
+theorem admissible_step_alt : WalkStep A B → WalkStepAlt A B := by
+  -- try it :D
+  sorry
+
+end AdmissibleDerivable
