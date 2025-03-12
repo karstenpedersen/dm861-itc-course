@@ -72,13 +72,15 @@ example : (seller ⮕ buyer ; 𝟎) -[(seller ⮕ buyer)]-> (𝟎) := by
 -- Exercise 2.3
 -- The transition for the exercise 2.1
 example : (alice ⮕ bob ; bob ⮕ charlie ; charlie ⮕ alice ; 𝟎) -[(alice ⮕ bob)]-> (bob ⮕ charlie ; charlie ⮕ alice ; 𝟎) := by
-  sorry
+    apply LTS.com
   -- try it :D
+
 example : (bob ⮕ charlie ; charlie ⮕ alice ; 𝟎) -[(bob ⮕ charlie)]-> (charlie ⮕ alice ; 𝟎) := by
-  sorry
+  apply LTS.com
   -- try it :D
+
 example : (charlie ⮕ alice ; 𝟎) -[(charlie ⮕ alice)]-> (𝟎) := by
-  sorry
+  apply LTS.com
   -- try it :D
 
 -- The transition for the exercise 2.2
@@ -170,13 +172,32 @@ example : (buyer ⮕ seller ; seller ⮕ buyer ; 𝟎) -[([buyer ⮕ seller] ∷
 
 -- Exercise 2.9
 -- Rule StepL is admissible
-theorem admissible_step_l : c -[tl]-> c'' → c'' -[tls]->> c' →  c -[(tl :: tls)]->> c' := by
-  sorry
+theorem admissible_step_l :
+    c -[tl]-> c'' → c'' -[tls]->> c' →
+    c -[(tl :: tls)]->> c' := by
+    intro h1 h2
+    induction h2
+    case refl =>
+      rw [eq_concat_nil]
+      apply MST.stepR
+      . exact MST.refl
+      . exact h1
+    case stepR ps s₁  p s₂ h2 h3 ih  =>
+      rw [cons_concat_eq]
+      apply MST.stepR
+      . exact ih
+      . exact h3
   -- try it :D
 
 -- Rule Comp is admissible
 theorem admissible_comp : c -[tls]->> c'' → c'' -[tls']->> c' → c -[(tls ++ tls')]->> c' := by
-  sorry
+  intro h1 h2
+  induction h2
+  case refl =>
+    simp
+    exact h1
+  case stepR ps s₁  p s₂ h2 h3 ih =>
+    sorry
   -- try it :D
 
 -- Exercise 2.10
