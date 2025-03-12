@@ -1,0 +1,6 @@
+{
+	"lean4.input.customTranslations": {
+		"nil": "𝟎",
+		"com": "⮕"
+	}
+}

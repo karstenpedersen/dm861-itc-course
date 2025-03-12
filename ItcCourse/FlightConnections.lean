@@ -131,6 +131,7 @@ end FC
 /- The system in figure 1.3 -/
 namespace FCSym
 /- Axioms : flight connections between cities -/
+
 inductive Conn : City → City → Prop where
   | OR : Conn .Odense .Rome
   | RS : Conn .Rome .Sydney

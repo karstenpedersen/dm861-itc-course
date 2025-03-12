@@ -21,7 +21,10 @@ syntax:12 (name := scnil) "𝟎" : term
   | _ => Lean.Macro.throwUnsupported
 
 -- Example 2.2
-example : SimpleChor := buyer ⮕ seller ; seller ⮕ buyer ; 𝟎
+example : SimpleChor :=
+  buyer ⮕ seller;
+  seller ⮕ buyer;
+  𝟎
 
 -- Exercise 2.1 Write a choregraphy for the following ring protocol among Alice, Bob, and Charlie
 -- Alice communicates a message to Bob, Bob communicates a message to Charlie, and Charlie communicates a message to Alice.
