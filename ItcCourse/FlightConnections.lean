@@ -74,18 +74,39 @@ theorem D_os : Walk .Odense .Sydney := by
 
 -- Exercise 1.1 Derive walk(New York, Sydney)
 theorem D_ns : Walk .NewYork .Sydney := by
-  -- try it :D
-  sorry
+  apply Walk.comp
+  . apply Walk.dir
+    apply Conn.NR
+  . apply Walk.dir
+    apply Conn.RS
 
 -- Exercise 1.2 Derive walk(Odense, New York)
 theorem D_on : Walk .Odense .NewYork := by
-  -- try it :D
-  sorry
+  apply Walk.comp
+  . apply Walk.comp
+    . apply Walk.dir
+      apply Conn.OR
+    . apply Walk.dir
+      apply Conn.RS
+  . apply Walk.comp
+    . apply Walk.dir
+      apply Conn.ST
+    . apply Walk.dir
+      apply Conn.TN
 
 -- Exercise 1.3 Derive walk(New York, New York)
 theorem D_nn : Walk .NewYork .NewYork := by
-  -- try it :D
-  sorry
+  apply Walk.comp
+  . apply Walk.comp
+    . apply Walk.dir
+      apply Conn.NR
+    . apply Walk.dir
+      apply Conn.RS
+  . apply Walk.comp
+    . apply Walk.dir
+      apply Conn.ST
+    . apply Walk.dir
+      apply Conn.TN
 
 -- Subderivations of Example 1.1 D_os
 theorem E : Walk .Odense .Rome := by
@@ -152,13 +173,47 @@ inductive Walk : City → City → Prop where
 
 -- Exercise 1.4
 theorem D_oo : Walk .Odense .Odense := by
-  -- try it :D
-  sorry
+  apply Walk.comp
+  . apply Walk.dir
+    apply Conn.OR
+  . apply Walk.dir
+    apply Conn.sym
+    apply Conn.OR
 
 -- Exercise 1.5
 theorem any_city_has_walk : ∀ a, Walk a a := by
-  -- try it :D
-  sorry
+  intro a
+  cases a with
+  | Odense => exact D_oo
+  | Rome =>
+  . apply Walk.comp
+    . apply Walk.dir
+      apply Conn.RS
+    . apply Walk.dir
+      apply Conn.sym
+      apply Conn.RS
+  | NewYork =>
+  . apply Walk.comp
+    . apply Walk.dir
+      apply Conn.NR
+    . apply Walk.dir
+      apply Conn.sym
+      apply Conn.NR
+  | Tokyo =>
+  . apply Walk.comp
+    . apply Walk.dir
+      apply Conn.TN
+    . apply Walk.dir
+      apply Conn.sym
+      apply Conn.TN
+  | Sydney =>
+  . apply Walk.comp
+    . apply Walk.dir
+      apply Conn.ST
+    . apply Walk.dir
+      apply Conn.sym
+      apply Conn.ST
+
 end FCSym
 
 /- The system in figure 1.4 -/
