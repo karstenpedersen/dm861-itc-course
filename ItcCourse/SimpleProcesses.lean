@@ -115,7 +115,7 @@ theorem Network.supp_union (n m : Network) {h : n.disjoint m} : supp (n | m) = s
 -- Example 3.6
 #check funext
 -- In mathlib: https://leanprover-community.github.io/mathlib4_docs/Init/Core.html#funext
-theorem Network.nil_par_eq_nil: ((𝟎ₙ) | (𝟎ₙ)) = (𝟎ₙ) := by
+theorem Network.nil_par_eq_nil: (𝟎ₙ | 𝟎ₙ) = (𝟎ₙ) := by
   -- aesop
   apply funext
   intro p
@@ -125,7 +125,7 @@ theorem Network.nil_par_eq_nil: ((𝟎ₙ) | (𝟎ₙ)) = (𝟎ₙ) := by
 
 -- Properties of Parallel Composition
 -- Proposition 3.4 partial commutative monoid
-theorem Network.par_nil (n : Network) : (n | (𝟎ₙ)) = n := by
+theorem Network.par_nil (n : Network) : (n | 𝟎ₙ) = n := by
   funext p
   simp [Network.par]
   -- aesop -- simplifies the last three lines
