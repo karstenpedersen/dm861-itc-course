@@ -193,20 +193,26 @@ theorem admissible_step_l :
   -- try it :D
 
 -- Rule Comp is admissible
-theorem admissible_comp : c -[tls]->> c'' → c'' -[tls']->> c' → c -[(tls ++ tls')]->> c' := by
+theorem admissible_comp : c -[tls]->> c'' → c'' -[tls']->> c' →
+  c -[(tls ++ tls')]->> c' := by
   intro h1 h2
   induction h2
   case refl =>
     simp
     exact h1
-  case stepR ps s₁  p s₂ h2 h3 ih =>
-    sorry
+  case stepR ps s'  p s'' _ h3 ih =>
+    rw [append_concat_eq]
+    apply MST.stepR
+    . exact ih
+    . exact h3
   -- try it :D
 
 -- Exercise 2.10
--- Rule Single is admissible
+-- Rule Single is derivable
 theorem derivable_single : c -[tl]-> c' → c -[[tl]]->> c' := by
-  sorry
+  rw [eq_concat_nil]
+  apply MST.stepR
+  exact MST.refl
   -- try it :D
 
 -- Exercise 2.11
@@ -225,17 +231,48 @@ syntax:30 (name := scMSTL) term:30 " -[ " term:30 " ]->>ₗ " term:30 : term
 
 -- Rule StepR is admissible
 theorem admissible_l_step_r : c -[tls]->>ₗ c'' → c'' -[tl]-> c' →  c -[(tls ∷ₜ tl)]->>ₗ c' := by
-  sorry
+  intro h1 h2
+  induction h1
+  case refl =>
+    apply MSTₗ.stepL
+    . exact h2
+    . exact MSTₗ.refl
+  case stepL s ps s' p s'' h1 h3 ih =>
+    apply MSTₗ.stepL
+    . exact h1
+    . -- This is forward reasoning
+      have goal := ih h2
+      exact goal
+
+      -- This is backward reasoning
+      -- apply ih
+      -- exact h2
+      -- sorry
   -- try it :D
 
 -- Rule Comp is admissible
 theorem admissible_l_comp : c -[tls]->>ₗ c'' → c'' -[tls']->>ₗ c' → c -[(tls ++ tls')]->>ₗ c' := by
-  sorry
+  intro h1 h2
+  induction h1
+  case refl =>
+    simp
+    exact h2
+  case stepL s ps s' p s'' h1 h3 ih =>
+    apply MSTₗ.stepL
+    . exact h1
+    -- . have goal := ih h2
+    --   exact goal
+    . apply ih
+      exact h2
   -- try it :D
 
 -- Rule Single is admissible
-theorem admissible_l_single : c -[tl]-> c' → c -[[tl]]->>ₗ c' := by
-  sorry
+theorem admissible_l_single : c -[tl]-> c' →
+  c -[[tl]]->>ₗ c' := by
+  intro h1
+  apply MSTₗ.stepL
+  . exact h1
+  . exact MSTₗ.refl
   -- try it :D
 
 -- Exercise 2.12
