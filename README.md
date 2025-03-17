@@ -33,6 +33,8 @@ Welcome to the GitHub repository for the course DM861 Concurrency Theory held at
 # Hacking in Lean 4
 Here are useful materials for learning theorem proving in Lean 4.
 - [Basic] Learning the basic tactics in Lean 4 via a game: [The Natural Number Game](https://adam.math.hhu.de/#/g/leanprover-community/nng4)
+- Resources for learning Lean 4 : [link](https://leanprover-community.github.io/learn.html)
+- Theorem Proving in Lean 4 : [link](https://lean-lang.org/theorem_proving_in_lean4/title_page.html)
 - More on tactics:
     - To list all tactics in Lean4
     ```lean
