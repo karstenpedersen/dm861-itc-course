@@ -61,7 +61,7 @@ macro t1:term:10 "[" t2:term:11 "]" : term => `(Network.atomic $t1 $t2)
 -- as the defines in Example 3.2
 example : Network := buyer [ (seller ! ; seller ? ; 𝟎ₚ) ]
 
--- Deciable equality for SimpleProc, this is need for encoding the parallel composition
+-- Decidable equality for SimpleProc, this is need for encoding the parallel composition
 instance (n : Network) : DecidablePred (fun p => n p = (𝟎ₚ)) := by
   intro p
   simp_all
@@ -83,7 +83,8 @@ macro t1:term:10 " | " t2:term:11 : term => `(Network.par $t1 $t2)
 -- but we will explicitly need this to prove properties about the parallel composition.
 
 -- Example 3.4 using the parallel composition to implement the bookstore scenario in example 3.1
-example : Network := buyer [ (seller ! ; seller ? ; 𝟎ₚ) ] | seller [ (buyer ? ; buyer ! ; 𝟎ₚ) ]
+example : Network :=
+  buyer [ (seller ! ; seller ? ; 𝟎ₚ) ] | seller [ (buyer ? ; buyer ! ; 𝟎ₚ) ]
 
 -- Two networks are disjoint if they share no running processes
 def Network.disjoint (n m : Network) : Prop :=
@@ -115,25 +116,52 @@ theorem Network.supp_union (n m : Network) {h : n.disjoint m} : supp (n | m) = s
 -- Example 3.6
 #check funext
 -- In mathlib: https://leanprover-community.github.io/mathlib4_docs/Init/Core.html#funext
-theorem Network.nil_par_eq_nil: (𝟎ₙ | 𝟎ₙ) = (𝟎ₙ) := by
-  -- aesop
-  apply funext
-  intro p
-  simp [Network.par]
+theorem Network.nil_par_eq_nil:
+  (𝟎ₙ | 𝟎ₙ) = (𝟎ₙ) := by
+  rfl
+  -- apply funext
+  -- intro p
+  -- simp [Network.par]
 -- Notes on aesop : Lean 4's proof search tactic.
 -- https://github.com/leanprover-community/aesop
 
 -- Properties of Parallel Composition
 -- Proposition 3.4 partial commutative monoid
 theorem Network.par_nil (n : Network) : (n | 𝟎ₙ) = n := by
+  -- apply funext
+  -- intro p
   funext p
   simp [Network.par]
-  -- aesop -- simplifies the last three lines
-  intro h
-  simp [h]
-  rfl
+  aesop -- simplifies the last three lines
+  -- intro h
+  -- simp [h]
+  -- rfl
 
-lemma Network.par_comm (n m : Network) {h : n.disjoint m} : (n | m) = (m | n) := by
+lemma mylemma : ∀ (n m : Network), n.disjoint m → (n | m) = (m | n) := by
+  intro n
+  intro m
+  intro h
+  funext p
+  simp [Network.par]
+  simp [Network.disjoint] at h
+  specialize (h p)
+  cases h
+  . rename_i h_n_p_nil
+    simp [h_n_p_nil]
+    by_cases h_m_p_nil : m p = SimpleProc.nil
+    . simp only [h_m_p_nil]
+      trivial
+    . simp only [h_m_p_nil]
+      trivial
+  . sorry
+
+
+
+
+#check mylemma
+
+lemma Network.par_comm (n m : Network)
+  {h : n.disjoint m} : (n | m) = (m | n) := by
   funext p
   simp [Network.par]
   simp [Network.disjoint] at h
