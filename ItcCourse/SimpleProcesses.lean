@@ -78,13 +78,13 @@ instance (n : Network) : DecidablePred (fun p => n p = (𝟎ₚ)) := by
 -- note: n p ≠ (𝟎ₚ) -> p ∈ supp n, recall the definition of supp n
 def Network.par (n m : Network): Network :=
   λ p => if n p ≠ (𝟎ₚ) then n p else m p
-macro t1:term:10 " | " t2:term:11 : term => `(Network.par $t1 $t2)
+macro t1:term:10 " |ₙ " t2:term:11 : term => `(Network.par $t1 $t2)
 -- note : we are implicitly assuming that supp n # supp m,
 -- but we will explicitly need this to prove properties about the parallel composition.
 
 -- Example 3.4 using the parallel composition to implement the bookstore scenario in example 3.1
 example : Network :=
-  buyer [ (seller ! ; seller ? ; 𝟎ₚ) ] | seller [ (buyer ? ; buyer ! ; 𝟎ₚ) ]
+  buyer [ (seller ! ; seller ? ; 𝟎ₚ) ] |ₙ seller [ (buyer ? ; buyer ! ; 𝟎ₚ) ]
 
 -- Two networks are disjoint if they share no running processes
 def Network.disjoint (n m : Network) : Prop :=
@@ -102,7 +102,7 @@ theorem Network.disjoint_symm (n m : Network) : n.disjoint m → m.disjoint n :=
     assumption
 
 -- Proposition 3.2 and exercise 3.3
-theorem Network.supp_union (n m : Network) {h : n.disjoint m} : supp (n | m) = supp n ∪ supp m := by
+theorem Network.supp_union (n m : Network) {h : n.disjoint m} : supp (n |ₙ m) = supp n ∪ supp m := by
   sorry
   -- Try it :D
   -- Hint: use Set.ext
@@ -117,7 +117,7 @@ theorem Network.supp_union (n m : Network) {h : n.disjoint m} : supp (n | m) = s
 #check funext
 -- In mathlib: https://leanprover-community.github.io/mathlib4_docs/Init/Core.html#funext
 theorem Network.nil_par_eq_nil:
-  (𝟎ₙ | 𝟎ₙ) = (𝟎ₙ) := by
+  (𝟎ₙ |ₙ 𝟎ₙ) = (𝟎ₙ) := by
   rfl
   -- apply funext
   -- intro p
@@ -127,7 +127,7 @@ theorem Network.nil_par_eq_nil:
 
 -- Properties of Parallel Composition
 -- Proposition 3.4 partial commutative monoid
-theorem Network.par_nil (n : Network) : (n | 𝟎ₙ) = n := by
+theorem Network.par_nil (n : Network) : (n |ₙ 𝟎ₙ) = n := by
   -- apply funext
   -- intro p
   funext p
@@ -137,7 +137,7 @@ theorem Network.par_nil (n : Network) : (n | 𝟎ₙ) = n := by
   -- simp [h]
   -- rfl
 
-lemma mylemma : ∀ (n m : Network), n.disjoint m → (n | m) = (m | n) := by
+lemma mylemma : ∀ (n m : Network), n.disjoint m → (n |ₙ m) = (m |ₙ n) := by
   intro n
   intro m
   intro h
@@ -161,7 +161,7 @@ lemma mylemma : ∀ (n m : Network), n.disjoint m → (n | m) = (m | n) := by
 #check mylemma
 
 lemma Network.par_comm (n m : Network)
-  {h : n.disjoint m} : (n | m) = (m | n) := by
+  {h : n.disjoint m} : (n |ₙ m) = (m |ₙ n) := by
   funext p
   simp [Network.par]
   simp [Network.disjoint] at h
@@ -178,14 +178,52 @@ lemma Network.par_comm (n m : Network)
     . simp [h₂]
     . simp [h₂]
 
-lemma Network.par_assoc (n1 n2 n3 : Network) : ((n1 | n2) | n3) = (n1 | (n2 | n3)) := by
+lemma Network.par_assoc (n1 n2 n3 : Network) : ((n1 |ₙ n2) |ₙ n3) = (n1 |ₙ (n2 |ₙ n3)) := by
   funext p
   simp [Network.par]
+  -- by_cases h₁ : n1 p = (𝟎ₚ)
+  -- . simp [h₁]
+  -- . simp [h₁]
   -- Now I am lazy _(:3 」∠)_
   aesop
 
 -- Propositional 3.5 and exercise 3.4
-theorem Network.par_atomic_nil : (n | (p [𝟎ₚ])) = n := by
+theorem Network.par_atomic_nil : (n |ₙ (p [𝟎ₚ])) = n := by
   sorry
   -- Try it :D
   -- Hint: use funext
+
+/- Semantics -/
+inductive NLTS : Network → TransitionLabel → Network → Prop where
+  | com :
+    NLTS (p [ (q ! ; pr)] |ₙ q [ (p ? ; qr)]) (p ⮕ q) (p [pr] |ₙ q [qr])
+  | par :
+    NLTS n tl n' → NLTS (n |ₙ m) tl (n' |ₙ m)
+
+-- Example 3.8
+private axiom buyer_not_seller : buyer ≠ seller
+example : NLTS (buyer [ (seller ! ; seller ? ; 𝟎ₚ) ] |ₙ seller [ (buyer ? ; buyer ! ; 𝟎ₚ) ]) (buyer ⮕ seller) (buyer [ (seller ? ; 𝟎ₚ) ] |ₙ seller [ (buyer ! ; 𝟎ₚ) ]) := by
+  exact NLTS.com
+
+-- Example 3.9
+lemma buyer_disjoint_seller : (buyer [ (seller ? ; 𝟎ₚ) ]).disjoint (seller [ (buyer ! ; 𝟎ₚ) ]) := by
+  intro p
+  simp [Network.atomic]
+  by_cases h_p_buyer : p = buyer
+  . simp [h_p_buyer]
+    exact buyer_not_seller
+  . apply Or.inl
+    exact Ne.symm h_p_buyer
+
+example : NLTS (buyer [ (seller ? ; 𝟎ₚ) ] |ₙ seller [ (buyer ! ; 𝟎ₚ) ]) (seller ⮕ buyer) (seller [ 𝟎ₚ ] |ₙ buyer [ 𝟎ₚ ]) := by
+  -- Parallel composition is commutative
+  rw [@Network.par_comm (buyer [ (seller ? ; 𝟎ₚ) ]) (seller [ (buyer ! ; 𝟎ₚ) ]) buyer_disjoint_seller]
+  exact NLTS.com
+
+lemma atomic_nil_eq_network_nil (p : PName) : p [𝟎ₚ] = (𝟎ₙ) := by
+  funext q
+  simp [Network.atomic, Network.nil]
+
+example : (seller [ 𝟎ₚ ] |ₙ buyer [ 𝟎ₚ ]) = (𝟎ₙ) := by
+  rw [Network.par_atomic_nil] -- proposition 3.5
+  rw [atomic_nil_eq_network_nil]

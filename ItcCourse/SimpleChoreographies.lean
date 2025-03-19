@@ -36,17 +36,6 @@ example : SimpleChor := sorry
 example : SimpleChor := sorry
 -- try it :D
 
-inductive TransitionLabel : Type where
-  | com (p q : PName)
-
-syntax:10 (name := sclcom) term:10 " ⮕ " term:10 : term
-@[macro sclcom] def sclcomImpl : Lean.Macro
-  | `($t1:term ⮕ $t2:term) => `(TransitionLabel.com $t1 $t2)
-  | _ => Lean.Macro.throwUnsupported
-
-def pn : TransitionLabel → Finset PName
-  | p ⮕ q => {p, q}
-
 syntax:10 (name := scpndisj) term:10 " # " term:10 : term
 @[macro scpndisj] def pndisjImpl : Lean.Macro
   | `($t1:term # $t2:term) => `(Disjoint $t1 $t2)
