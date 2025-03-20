@@ -3,10 +3,21 @@ import ItcCourse.Common
 
 variable {buyer seller alice bob charlie: PName}
 
-inductive SimpleProc : Type where
+inductive SimpleProc : Type 0 where
   | nil
   | send (p : PName) (pr : SimpleProc)
   | receive (p : PName) (pr : SimpleProc)
+
+-- Explaining Russell's paradox
+inductive MyInductive0 : Type 0 where
+  | oneCase
+
+inductive MyInductive1 : Type 1 where
+  | anotherCase
+
+inductive AnotherInductive {α : Type u} {β : Type v} : Type (max u v) where
+  | caseblah (x : α) (y : β)
+-- end of explanation
 
 syntax:12 (name := spnil) "𝟎ₚ" : term
 @[macro spnil] def spnilImpl : Lean.Macro
