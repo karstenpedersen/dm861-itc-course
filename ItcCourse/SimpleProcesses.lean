@@ -308,15 +308,15 @@ lemma rm_unaffected_process (n₁ n₂ : Network) (tl : TransitionLabel) (r : PN
   case com p q pr qr =>
     simp [TransitionLabel.pn] at hnotin
     obtain ⟨ hrnotp , hrnotq ⟩ := hnotin
-    -- introduce a hypothesis locally
+    -- Step 1 : introduce a hypothesis locally
     have hr_notin_supp₁ : r ∉ supp ((p [ (SimpleProc.send q pr)] ) |ₙ (q [(SimpleProc.receive p qr)])) := by
       simp [supp]
       simp [Network.par, Network.atomic]
       simp [Ne.symm hrnotp]
       simp [Ne.symm hrnotq]
-    -- using proposition 3.8 to construct an equality relation for the networks before the transition
+    -- Step 2: using proposition 3.8 to construct an equality relation for the networks before the transition
     have heq₁ := rm_not_in_supp ((p [ (SimpleProc.send q pr)] ) |ₙ (q [(SimpleProc.receive p qr)])) r hr_notin_supp₁
-    -- repeat for the networks after the transition
+    -- repeat the previous two steps for the networks after the transition
     have hr_notin_supp₂ : r ∉ supp ((p [pr]) |ₙ (q [qr])) := by
       simp [supp]
       simp [Network.par, Network.atomic]
