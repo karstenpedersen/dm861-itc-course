@@ -46,7 +46,7 @@ inductive LTS : SimpleChor → TransitionLabel → SimpleChor → Prop where
   | com :
     LTS (p ⮕ q ; c) (p ⮕ q) c
   | delay :
-    LTS c tl c' → ({p, q} # (pn tl)) →
+    LTS c tl c' → ({p, q} # (tl.pn)) →
     ----------------------------------
     LTS (p ⮕ q ; c) tl (p ⮕ q ; c')
 
@@ -92,7 +92,7 @@ example : (buyer₁ ⮕ seller₁ ; buyer₂ ⮕ seller₂ ; 𝟎) -[(buyer₂ �
   apply LTS.delay
   apply LTS.com
   -- Handling the side condition
-  simp [pn, h.symm]
+  simp [TransitionLabel.pn, h.symm]
 
 /- Tips :
   1. Use the `simp` tactic to simplify the goal
@@ -114,8 +114,8 @@ example : (p₁ ⮕ q₁ ; p₂ ⮕ q₂ ; p₃ ⮕ q₃ ; 𝟎) -[(p₃ ⮕ q�
   apply LTS.delay
   . apply LTS.delay
     . apply LTS.com
-    . simp [pn, h₃.symm]
-  . simp [pn, h₂.symm]
+    . simp [TransitionLabel.pn, h₃.symm]
+  . simp [TransitionLabel.pn, h₂.symm]
 
 namespace MultiStepTransition
 abbrev TransitionLabels := List TransitionLabel

@@ -9,5 +9,5 @@ syntax:10 (name := sclcom) term:10 " ⮕ " term:10 : term
   | `($t1:term ⮕ $t2:term) => `(TransitionLabel.com $t1 $t2)
   | _ => Lean.Macro.throwUnsupported
 
-def pn : TransitionLabel → Finset PName
+def TransitionLabel.pn : TransitionLabel → Finset PName
   | p ⮕ q => {p, q}
