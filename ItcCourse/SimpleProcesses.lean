@@ -211,9 +211,14 @@ inductive NLTS : Network → TransitionLabel → Network → Prop where
   | par :
     NLTS n tl n' → NLTS (n |ₙ m) tl (n' |ₙ m)
 
+syntax:30 (name := spNLTS) term:30 " -[ " term:30 " ]ₙ-> " term:30 : term
+@[macro spNLTS] def spNLTSImpl : Lean.Macro
+  | `($t1 -[ $t2 ]ₙ-> $t3) => `(NLTS $t1 $t2 $t3)
+  | _ => Lean.Macro.throwUnsupported
+
 -- Example 3.8
 private axiom buyer_not_seller : buyer ≠ seller
-example : NLTS (buyer [ (seller ! ; seller ? ; 𝟎ₚ) ] |ₙ seller [ (buyer ? ; buyer ! ; 𝟎ₚ) ]) (buyer ⮕ seller) (buyer [ (seller ? ; 𝟎ₚ) ] |ₙ seller [ (buyer ! ; 𝟎ₚ) ]) := by
+example : (buyer [ (seller ! ; seller ? ; 𝟎ₚ) ] |ₙ seller [ (buyer ? ; buyer ! ; 𝟎ₚ) ]) -[(buyer ⮕ seller)]ₙ-> (buyer [ (seller ? ; 𝟎ₚ) ] |ₙ seller [ (buyer ! ; 𝟎ₚ) ]) := by
   exact NLTS.com
 
 -- Example 3.9
@@ -226,7 +231,7 @@ lemma buyer_disjoint_seller : (buyer [ (seller ? ; 𝟎ₚ) ]).disjoint (seller 
   . apply Or.inl
     exact Ne.symm h_p_buyer
 
-example : NLTS (buyer [ (seller ? ; 𝟎ₚ) ] |ₙ seller [ (buyer ! ; 𝟎ₚ) ]) (seller ⮕ buyer) (seller [ 𝟎ₚ ] |ₙ buyer [ 𝟎ₚ ]) := by
+example : (buyer [ (seller ? ; 𝟎ₚ) ] |ₙ seller [ (buyer ! ; 𝟎ₚ) ]) -[(seller ⮕ buyer)]ₙ-> (seller [ 𝟎ₚ ] |ₙ buyer [ 𝟎ₚ ]) := by
   -- Parallel composition is commutative
   rw [@Network.par_comm (buyer [ (seller ? ; 𝟎ₚ) ]) (seller [ (buyer ! ; 𝟎ₚ) ]) buyer_disjoint_seller]
   exact NLTS.com
@@ -238,3 +243,91 @@ lemma atomic_nil_eq_network_nil (p : PName) : p [𝟎ₚ] = (𝟎ₙ) := by
 example : (seller [ 𝟎ₚ ] |ₙ buyer [ 𝟎ₚ ]) = (𝟎ₙ) := by
   rw [Network.par_atomic_nil] -- proposition 3.5
   rw [atomic_nil_eq_network_nil]
+
+-- Example 3.10 Parallel execution
+variable {client server gateway : PName}
+example : (client [ (gateway ! ; 𝟎ₚ)] |ₙ (gateway [ (client ? ; server ! ; 𝟎ₚ ) ] |ₙ server [ (gateway ? ; 𝟎ₚ)]))
+  -[(client ⮕ gateway)]ₙ-> ((client [ 𝟎ₚ ] |ₙ gateway [ (server ! ; 𝟎ₚ) ]) |ₙ server [ (gateway ? ; 𝟎ₚ) ]) := by
+  rw [← Network.par_assoc] -- ← specifies the direction of the rewrite
+  apply NLTS.par
+  exact NLTS.com
+
+/- Fundemental Property of the Semantics -/
+
+-- Transition and process names
+-- Proposition 3.7 : A transition never affacts the processes that are not involved in the transition
+-- Proof by induction on the transition label
+lemma unaffected_process (n₁ n₂ : Network) (tl : TransitionLabel) (r : PName):
+  n₁ -[tl]ₙ-> n₂ → r ∉ tl.pn → n₁ r = n₂ r := by
+  intro hnlts hnotin
+  induction hnlts
+  case com p q pr qr =>
+    simp [TransitionLabel.pn] at hnotin
+    simp [Network.par]
+    simp [Network.atomic]
+    obtain ⟨ hrnotp , hrnotq ⟩ := hnotin
+    simp [Ne.symm hrnotp]
+    simp [Ne.symm hrnotq]
+  case par m₁ tl m₂ m hnlts ih =>
+    -- obtain equality from ih
+    have heq := ih hnotin
+    simp [Network.par]
+    simp [heq]
+
+-- Transition and process removal
+def Network.rm (n : Network) (p : PName) : Network :=
+  λ q => if p = q then 𝟎ₚ else n q
+notation:50 n " \\ " p => Network.rm n p
+
+-- Proposition 3.8 and Execrise 3.6
+lemma rm_not_in_supp (n : Network) (p : PName) : p ∉ supp n → (n \ p) = n := by
+  -- Try it and have fun :D
+  sorry
+
+-- Proposition 3.9 The order in which processes are removed does not matter
+lemma rm_comm (n : Network) (p q : PName) : ((n \ p) \ q) = ((n \ q) \ p):= by
+  funext r
+  simp [Network.rm]
+  by_cases hqr : q = r
+  . simp [hqr]
+  . simp [hqr]
+
+-- (Not in the book) A very good property to have, process removal is distributive over parallel composition
+lemma rm_par_dist (n m : Network) (p : PName) : ((n |ₙ m) \ p) = ((n \ p) |ₙ (m \ p)) := by
+  funext r
+  simp [Network.par, Network.rm]
+  by_cases hpr : p = r
+  . simp [hpr]
+  . simp [hpr]
+
+-- Lemma 3.10
+lemma rm_unaffected_process (n₁ n₂ : Network) (tl : TransitionLabel) (r : PName):
+  n₁ -[tl]ₙ-> n₂ → r ∉ tl.pn → (n₁ \ r) -[tl]ₙ-> (n₂ \ r):= by
+  intro hnlts hnotin
+  induction hnlts
+  case com p q pr qr =>
+    simp [TransitionLabel.pn] at hnotin
+    obtain ⟨ hrnotp , hrnotq ⟩ := hnotin
+    -- introduce a hypothesis locally
+    have hr_notin_supp₁ : r ∉ supp ((p [ (SimpleProc.send q pr)] ) |ₙ (q [(SimpleProc.receive p qr)])) := by
+      simp [supp]
+      simp [Network.par, Network.atomic]
+      simp [Ne.symm hrnotp]
+      simp [Ne.symm hrnotq]
+    -- using proposition 3.8 to construct an equality relation for the networks before the transition
+    have heq₁ := rm_not_in_supp ((p [ (SimpleProc.send q pr)] ) |ₙ (q [(SimpleProc.receive p qr)])) r hr_notin_supp₁
+    -- repeat for the networks after the transition
+    have hr_notin_supp₂ : r ∉ supp ((p [pr]) |ₙ (q [qr])) := by
+      simp [supp]
+      simp [Network.par, Network.atomic]
+      simp [Ne.symm hrnotp]
+      simp [Ne.symm hrnotq]
+    have heq₂ := rm_not_in_supp ((p [pr]) |ₙ (q [qr])) r hr_notin_supp₂
+    rw [heq₁, heq₂]
+    exact NLTS.com
+  case par m₁ tl m₂ m hnlts ih =>
+    -- This is simpler than the proof in the book
+    rw [rm_par_dist m₁ m r] -- you can specify what to rewrite
+    rw [rm_par_dist m₂ m r]
+    have hpar := @NLTS.par (m₁ \ r) tl (m₂ \ r) (m \ r) (ih hnotin)
+    exact hpar
