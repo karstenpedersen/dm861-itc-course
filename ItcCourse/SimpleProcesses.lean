@@ -282,7 +282,13 @@ notation:50 n " \\ " p => Network.rm n p
 -- Proposition 3.8 and Execrise 3.6
 lemma rm_not_in_supp (n : Network) (p : PName) : p ∉ supp n → (n \ p) = n := by
   -- Try it and have fun :D
-  sorry
+  intro hpnotinsupp
+  funext q
+  simp [Network.rm]
+  intro hpq
+  cases hpq
+  simp [supp] at hpnotinsupp
+  exact hpnotinsupp.symm
 
 -- Proposition 3.9 The order in which processes are removed does not matter
 lemma rm_comm (n : Network) (p q : PName) : ((n \ p) \ q) = ((n \ q) \ p):= by
