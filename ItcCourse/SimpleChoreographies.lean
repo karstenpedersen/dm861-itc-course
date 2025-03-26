@@ -36,17 +36,6 @@ example : SimpleChor := sorry
 example : SimpleChor := sorry
 -- try it :D
 
-inductive TransitionLabel : Type where
-  | com (p q : PName)
-
-syntax:10 (name := sclcom) term:10 " ⮕ " term:10 : term
-@[macro sclcom] def sclcomImpl : Lean.Macro
-  | `($t1:term ⮕ $t2:term) => `(TransitionLabel.com $t1 $t2)
-  | _ => Lean.Macro.throwUnsupported
-
-def pn : TransitionLabel → Finset PName
-  | p ⮕ q => {p, q}
-
 syntax:10 (name := scpndisj) term:10 " # " term:10 : term
 @[macro scpndisj] def pndisjImpl : Lean.Macro
   | `($t1:term # $t2:term) => `(Disjoint $t1 $t2)
@@ -57,7 +46,7 @@ inductive LTS : SimpleChor → TransitionLabel → SimpleChor → Prop where
   | com :
     LTS (p ⮕ q ; c) (p ⮕ q) c
   | delay :
-    LTS c tl c' → ({p, q} # (pn tl)) →
+    LTS c tl c' → ({p, q} # (tl.pn)) →
     ----------------------------------
     LTS (p ⮕ q ; c) tl (p ⮕ q ; c')
 
@@ -75,13 +64,15 @@ example : (seller ⮕ buyer ; 𝟎) -[(seller ⮕ buyer)]-> (𝟎) := by
 -- Exercise 2.3
 -- The transition for the exercise 2.1
 example : (alice ⮕ bob ; bob ⮕ charlie ; charlie ⮕ alice ; 𝟎) -[(alice ⮕ bob)]-> (bob ⮕ charlie ; charlie ⮕ alice ; 𝟎) := by
-  sorry
+    apply LTS.com
   -- try it :D
+
 example : (bob ⮕ charlie ; charlie ⮕ alice ; 𝟎) -[(bob ⮕ charlie)]-> (charlie ⮕ alice ; 𝟎) := by
-  sorry
+  apply LTS.com
   -- try it :D
+
 example : (charlie ⮕ alice ; 𝟎) -[(charlie ⮕ alice)]-> (𝟎) := by
-  sorry
+  apply LTS.com
   -- try it :D
 
 -- The transition for the exercise 2.2
@@ -101,7 +92,7 @@ example : (buyer₁ ⮕ seller₁ ; buyer₂ ⮕ seller₂ ; 𝟎) -[(buyer₂ �
   apply LTS.delay
   apply LTS.com
   -- Handling the side condition
-  simp [pn, h.symm]
+  simp [TransitionLabel.pn, h.symm]
 
 /- Tips :
   1. Use the `simp` tactic to simplify the goal
@@ -123,8 +114,8 @@ example : (p₁ ⮕ q₁ ; p₂ ⮕ q₂ ; p₃ ⮕ q₃ ; 𝟎) -[(p₃ ⮕ q�
   apply LTS.delay
   . apply LTS.delay
     . apply LTS.com
-    . simp [pn, h₃.symm]
-  . simp [pn, h₂.symm]
+    . simp [TransitionLabel.pn, h₃.symm]
+  . simp [TransitionLabel.pn, h₂.symm]
 
 namespace MultiStepTransition
 abbrev TransitionLabels := List TransitionLabel
@@ -173,19 +164,44 @@ example : (buyer ⮕ seller ; seller ⮕ buyer ; 𝟎) -[([buyer ⮕ seller] ∷
 
 -- Exercise 2.9
 -- Rule StepL is admissible
-theorem admissible_step_l : c -[tl]-> c'' → c'' -[tls]->> c' →  c -[(tl :: tls)]->> c' := by
-  sorry
+theorem admissible_step_l :
+    c -[tl]-> c'' → c'' -[tls]->> c' →
+    c -[(tl :: tls)]->> c' := by
+    intro h1 h2
+    induction h2
+    case refl =>
+      rw [eq_concat_nil]
+      apply MST.stepR
+      . exact MST.refl
+      . exact h1
+    case stepR ps s₁  p s₂ h2 h3 ih  =>
+      rw [cons_concat_eq]
+      apply MST.stepR
+      . exact ih
+      . exact h3
   -- try it :D
 
 -- Rule Comp is admissible
-theorem admissible_comp : c -[tls]->> c'' → c'' -[tls']->> c' → c -[(tls ++ tls')]->> c' := by
-  sorry
+theorem admissible_comp : c -[tls]->> c'' → c'' -[tls']->> c' →
+  c -[(tls ++ tls')]->> c' := by
+  intro h1 h2
+  induction h2
+  case refl =>
+    simp
+    exact h1
+  case stepR ps s'  p s'' _ h3 ih =>
+    rw [append_concat_eq]
+    apply MST.stepR
+    . exact ih
+    . exact h3
   -- try it :D
 
 -- Exercise 2.10
--- Rule Single is admissible
+-- Rule Single is derivable
 theorem derivable_single : c -[tl]-> c' → c -[[tl]]->> c' := by
-  sorry
+  rw [eq_concat_nil]
+  apply MST.stepR
+  exact MST.refl
   -- try it :D
 
 -- Exercise 2.11
@@ -204,17 +220,48 @@ syntax:30 (name := scMSTL) term:30 " -[ " term:30 " ]->>ₗ " term:30 : term
 
 -- Rule StepR is admissible
 theorem admissible_l_step_r : c -[tls]->>ₗ c'' → c'' -[tl]-> c' →  c -[(tls ∷ₜ tl)]->>ₗ c' := by
-  sorry
+  intro h1 h2
+  induction h1
+  case refl =>
+    apply MSTₗ.stepL
+    . exact h2
+    . exact MSTₗ.refl
+  case stepL s ps s' p s'' h1 h3 ih =>
+    apply MSTₗ.stepL
+    . exact h1
+    . -- This is forward reasoning
+      have goal := ih h2
+      exact goal
+
+      -- This is backward reasoning
+      -- apply ih
+      -- exact h2
+      -- sorry
   -- try it :D
 
 -- Rule Comp is admissible
 theorem admissible_l_comp : c -[tls]->>ₗ c'' → c'' -[tls']->>ₗ c' → c -[(tls ++ tls')]->>ₗ c' := by
-  sorry
+  intro h1 h2
+  induction h1
+  case refl =>
+    simp
+    exact h2
+  case stepL s ps s' p s'' h1 h3 ih =>
+    apply MSTₗ.stepL
+    . exact h1
+    -- . have goal := ih h2
+    --   exact goal
+    . apply ih
+      exact h2
   -- try it :D
 
 -- Rule Single is admissible
-theorem admissible_l_single : c -[tl]-> c' → c -[[tl]]->>ₗ c' := by
-  sorry
+theorem admissible_l_single : c -[tl]-> c' →
+  c -[[tl]]->>ₗ c' := by
+  intro h1
+  apply MSTₗ.stepL
+  . exact h1
+  . exact MSTₗ.refl
   -- try it :D
 
 -- Exercise 2.12
