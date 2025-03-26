@@ -308,7 +308,7 @@ lemma rm_unaffected_process (n₁ n₂ : Network) (tl : TransitionLabel) (r : PN
   case com p q pr qr =>
     simp [TransitionLabel.pn] at hnotin
     obtain ⟨ hrnotp , hrnotq ⟩ := hnotin
-    -- Step 1 : introduce a hypothesis locally
+    -- Step 1 : introduce an assumption locally
     have hr_notin_supp₁ : r ∉ supp ((p [ (SimpleProc.send q pr)] ) |ₙ (q [(SimpleProc.receive p qr)])) := by
       simp [supp]
       simp [Network.par, Network.atomic]
