@@ -144,10 +144,10 @@ c -[tl]-> c' → (⟦ c ⟧ -[tl]ₙ-> ⟦c'⟧) := by
     -- We want to use Lemma 3.10
     have hpnotin : p ∉ tl'.pn := by
       have hpinpq : p ∈ ({p , q} : Finset PName) := by simp
-      exact (@Finset.disjoint_left PName {p , q} tl'.pn).1 hdisj hpinpq
+      exact Finset.disjoint_left.1 hdisj hpinpq
     have hqnotin : q ∉ tl'.pn := by
       have hqinpq : q ∈ ({p , q} : Finset PName) := by simp
-      exact (@Finset.disjoint_left PName {p , q} tl'.pn).1 hdisj hqinpq
+      exact Finset.disjoint_left.1 hdisj hqinpq
     have ihrmp : (⟦ c1 ⟧ \ p) -[tl']ₙ-> (⟦ c2 ⟧ \ p) := by
       exact Network.rm_unaffected_process (⟦ c1 ⟧) (⟦ c2 ⟧) tl' p ih hpnotin -- Lemma 3.10
     have ihqrm : ((⟦ c1 ⟧ \ p) \ q) -[tl']ₙ-> ((⟦ c2 ⟧ \ p) \ q) := by
