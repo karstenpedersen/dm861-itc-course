@@ -285,3 +285,15 @@ theorem derivable_mst_alt : c -[tls]->> c' → c -[tls]->>ₐ c' := by
   -- try it :D
 
 end MultiStepTransition
+
+
+-- Well-formedness
+inductive SimpleChor.WF : SimpleChor → Prop where
+  | nil : SimpleChor.WF (𝟎)
+  | com : SimpleChor.WF c → p ≠ q
+          → SimpleChor.WF (p ⮕ q ; c)
+
+lemma SimpleChor.WF_com_inv (hwf : SimpleChor.WF (p ⮕ q ; c)):
+  c.WF ∧ p ≠ q := by
+  cases hwf
+  case com hneq hwf' => exact ⟨hwf', hneq⟩
