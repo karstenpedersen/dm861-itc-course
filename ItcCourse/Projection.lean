@@ -56,7 +56,7 @@ opaque procNotBuyerOrSeller : PName := 3
 
 #eval (⟦ myBuyer ⮕ mySeller ; mySeller ⮕ myBuyer ; 𝟎 ⟧) procNotBuyerOrSeller
 
--- Lemma 3.15+, a more precise version of the lemma
+-- Lemma 3.15+, a more detailed version of the lemma
 -- A more general form would be N = N \ p \ q | p [ N p ] | q [ N q ]
 lemma Choreography.epp_rm_par (c : SimpleChor) (p q : PName):
   (⟦ c ⟧) = ((⟦ c ⟧ \ p) \ q) |ₙ (p [(⟦ c ⟧p)] |ₙ q [(⟦ c ⟧ q)]) := by
@@ -80,6 +80,7 @@ lemma Choreography.epp_rm_par (c : SimpleChor) (p q : PName):
       . simp [hprojnil]
       . simp [hprojnil]
 
+-- A more detailed version of the lemma 4.8
 lemma Choreography.epp_com_rm_eq_epp_cont_rm (p q : PName) (c : SimpleChor): ((⟦ (SimpleChor.com p q c) ⟧ \ p) \ q) = ((⟦ c ⟧ \ p) \ q) := by
   funext r
   simp [Network.rm]
