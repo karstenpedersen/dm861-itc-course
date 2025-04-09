@@ -56,7 +56,7 @@ opaque procNotBuyerOrSeller : PName := 3
 
 #eval (⟦ myBuyer ⮕ mySeller ; mySeller ⮕ myBuyer ; 𝟎 ⟧) procNotBuyerOrSeller
 
--- Lemma 3.15+, a more detailed version of the lemma
+-- Proposition 3.15+, a more detailed version of the proposition 3.15
 -- A more general form would be N = N \ p \ q | p [ N p ] | q [ N q ]
 lemma Choreography.epp_rm_par (c : SimpleChor) (p q : PName):
   (⟦ c ⟧) = ((⟦ c ⟧ \ p) \ q) |ₙ (p [(⟦ c ⟧p)] |ₙ q [(⟦ c ⟧ q)]) := by
@@ -98,16 +98,22 @@ c -[tl]-> c' → (⟦ c ⟧ -[tl]ₙ-> ⟦c'⟧) := by
   intro hlts
   induction hlts
   case com p q c1 =>
-    obtain ⟨ hwf', hneq⟩ := SimpleChor.WF_com_inv hwf
+
+    have hwfinv := SimpleChor.WF_com_inv hwf
+    obtain ⟨hinv, hneq ⟩ := hwfinv
+
     have heq1 : (⟦ (SimpleChor.com p q c1) ⟧) = (((⟦ (SimpleChor.com p q c1)⟧ \ p) \ q) |ₙ (p [ (q ! ; ⟦ c1 ⟧ p) ] |ₙ q [ (p ? ;  ⟦ c1 ⟧ q) ])) := by
-      have goal := Choreography.epp_rm_par (SimpleChor.com p q c1) p q -- by lemma 3.15+
+      have goal := Choreography.epp_rm_par (SimpleChor.com p q c1) p q -- by proposition 3.15+
       simp [SimpChor.projection] at goal -- by (4.3)
       simp [Ne.symm hneq] at goal -- by well-formedness
       exact goal
+
     have heq2 : (⟦ c1 ⟧) = ((⟦ c1 ⟧ \ p) \ q) |ₙ (p [(⟦ c1 ⟧p)] |ₙ q [(⟦ c1 ⟧ q)]) := by
       exact Choreography.epp_rm_par c1 p q -- by lemma 3.15+
+
     have heq3 := Choreography.epp_com_rm_eq_epp_cont_rm p q c1
     rw [heq3] at heq1
+
     -- commutativity of parallel composition
     have hcomm1 : (((⟦ c1⟧ \ p) \ q) |ₙ (p [ (q ! ; ⟦ c1 ⟧ p) ] |ₙ q [ (p ? ;  ⟦ c1 ⟧ q) ])) = (p [ (q ! ; ⟦ c1 ⟧ p) ] |ₙ q [ (p ? ;  ⟦ c1 ⟧ q) ]) |ₙ ((⟦ c1 ⟧ \ p) \ q) := by
       have hdisj := Network.ne_rm_par_disjoint (⟦  c1 ⟧) p q (q ! ; ⟦ c1 ⟧ p) (p ? ;  ⟦ c1 ⟧ q) hneq
@@ -121,6 +127,7 @@ c -[tl]-> c' → (⟦ c ⟧ -[tl]ₙ-> ⟦c'⟧) := by
     rw [hcomm2] at heq2
     rw [heq1]
     nth_rewrite 2 [heq2]
+
     apply NLTS.par
     apply NLTS.com
   case delay c1 tl' c2 p q hlts hdisj ih =>

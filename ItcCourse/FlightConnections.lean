@@ -158,8 +158,10 @@ theorem D_oo : Walk .Odense .Odense := by
 
 -- Exercise 1.5
 theorem any_city_has_walk : ∀ a, Walk a a := by
+  intro a
+  cases a <;> apply Walk.comp; repeat constructor
   -- try it :D
-  sorry
+  --sorry
 end FCSym
 
 /- The system in figure 1.4 -/
@@ -182,10 +184,10 @@ inductive Walk : City → City → Nat → Prop where
 -- Example 1.2
 example : Walk .Odense .Sydney 2 := by
   apply @Walk.comp .Odense .Rome 1 .Sydney 1
-  apply Walk.dir
-  apply Conn.OR
-  apply Walk.dir
-  apply Conn.RS
+  . apply Walk.dir
+    exact Conn.OR
+  . apply Walk.dir
+    exact Conn.RS
 end FCW
 
 namespace StructuralInduction
