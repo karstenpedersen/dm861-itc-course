@@ -117,29 +117,6 @@ example : (p₁ ⮕ q₁ ; p₂ ⮕ q₂ ; p₃ ⮕ q₃ ; 𝟎) -[(p₃ ⮕ q�
     . simp [TransitionLabel.pn, h₃.symm]
   . simp [TransitionLabel.pn, h₂.symm]
 
-namespace MultiStepTransition
-abbrev TransitionLabels := List TransitionLabel
-
-syntax:20 (name := sctlsnil) " ε " : term
-@[macro sctlsnil] def sctlsnilImpl : Lean.Macro
-  | `(ε) => `((List.nil : TransitionLabels))
-  | _ => Lean.Macro.throwUnsupported
-
-syntax:10 (name := sctls) term:10 " ∷ₜ " term:10 : term
-@[macro sctls] def sctlsImpl : Lean.Macro
-  | `($t1:term ∷ₜ $t2:term) => `( List.concat ($t1 : TransitionLabels) $t2)
-  | _ => Lean.Macro.throwUnsupported
-
--- Some useful lemmas for manupulating lists
-lemma eq_concat_nil :
-  [p] = (ε ∷ₜ p) := by rfl
-
-lemma cons_concat_eq:
-  x :: (xs ∷ₜ y) = ((x :: xs) ∷ₜ y) := by rfl
-
-lemma append_concat_eq :
-  xs ++ (ys ∷ₜ y) = ((xs ++ ys) ∷ₜ y) := by simp
-
 inductive MST : SimpleChor → TransitionLabels → SimpleChor → Prop where
   | refl :
     MST s (ε) s
@@ -283,9 +260,6 @@ syntax:30 (name := scMSTA) term:30 " -[ " term:30 " ]->>ₐ " term:30 : term
 theorem derivable_mst_alt : c -[tls]->> c' → c -[tls]->>ₐ c' := by
   sorry
   -- try it :D
-
-end MultiStepTransition
-
 
 -- Well-formedness
 inductive SimpleChor.WF : SimpleChor → Prop where

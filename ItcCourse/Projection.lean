@@ -14,7 +14,7 @@ def SimpChor.projection (c : SimpleChor) (r : PName) : SimpleProc :=
     if r = p then q ! ; (projection c' r)
     else if r = q then p ? ; (projection c' r)
     else projection c' r
-macro "⟦" t1:term:10 "⟧" t2:term:10 : term => `(SimpChor.projection $t1 $t2)
+notation:49 "⟦" t1 "⟧" t2 => SimpChor.projection t1 t2
 
 -- Example 4.1
 example : ( ⟦ buyer ⮕ seller ; seller ⮕ buyer ; 𝟎 ⟧ buyer) = (seller ! ; seller ? ; 𝟎ₚ) := by
