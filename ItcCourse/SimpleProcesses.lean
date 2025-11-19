@@ -67,7 +67,7 @@ syntax:12 (name := nwnil) "𝟎ₙ" : term
 -- Atomic network
 def Network.atomic (p : PName) (pr : SimpleProc) : Network :=
   λ q => if p = q then pr else 𝟎ₚ
-macro t1:term:10 "[" t2:term:11 "]" : term => `(Network.atomic $t1 $t2)
+notation:50  t1 "[" t2 "]" => Network.atomic t1 t2
 -- Example 3.3 The network with one running process, buyer, which behaves
 -- as the defines in Example 3.2
 example : Network := buyer [ (seller ! ; seller ? ; 𝟎ₚ) ]
@@ -89,7 +89,7 @@ instance (n : Network) : DecidablePred (fun p => n p = (𝟎ₚ)) := by
 -- note: n p ≠ (𝟎ₚ) -> p ∈ supp n, recall the definition of supp n
 def Network.par (n m : Network): Network :=
   λ p => if n p ≠ (𝟎ₚ) then n p else m p
-macro t1:term:10 " |ₙ " t2:term:11 : term => `(Network.par $t1 $t2)
+notation:51 t1 " |ₙ " t2 => Network.par t1 t2
 -- note : we are implicitly assuming that supp n # supp m,
 -- but we will explicitly need this to prove properties about the parallel composition.
 
@@ -200,7 +200,9 @@ lemma Network.par_assoc (n1 n2 n3 : Network) : ((n1 |ₙ n2) |ₙ n3) = (n1 |ₙ
 
 -- Propositional 3.5 and exercise 3.4
 theorem Network.par_atomic_nil : (n |ₙ (p [𝟎ₚ])) = n := by
-  sorry
+  funext q
+  simp [Network.par, Network.atomic]
+  simp_all
   -- Try it :D
   -- Hint: use funext
 
@@ -236,7 +238,7 @@ example : (buyer [ (seller ? ; 𝟎ₚ) ] |ₙ seller [ (buyer ! ; 𝟎ₚ) ]) -
   rw [@Network.par_comm (buyer [ (seller ? ; 𝟎ₚ) ]) (seller [ (buyer ! ; 𝟎ₚ) ]) buyer_disjoint_seller]
   exact NLTS.com
 
-lemma atomic_nil_eq_network_nil (p : PName) : p [𝟎ₚ] = (𝟎ₙ) := by
+lemma atomic_nil_eq_network_nil (p : PName) : (p [𝟎ₚ]) = (𝟎ₙ) := by
   funext q
   simp [Network.atomic, Network.nil]
 
@@ -257,7 +259,7 @@ example : (client [ (gateway ! ; 𝟎ₚ)] |ₙ (gateway [ (client ? ; server ! 
 -- Transition and process names
 -- Proposition 3.7 : A transition never affacts the processes that are not involved in the transition
 -- Proof by induction on the transition label
-lemma unaffected_process (n₁ n₂ : Network) (tl : TransitionLabel) (r : PName):
+lemma Network.unaffected_process (n₁ n₂ : Network) (tl : TransitionLabel) (r : PName):
   n₁ -[tl]ₙ-> n₂ → r ∉ tl.pn → n₁ r = n₂ r := by
   intro hnlts hnotin
   induction hnlts
@@ -280,12 +282,18 @@ def Network.rm (n : Network) (p : PName) : Network :=
 notation:50 n " \\ " p => Network.rm n p
 
 -- Proposition 3.8 and Execrise 3.6
-lemma rm_not_in_supp (n : Network) (p : PName) : p ∉ supp n → (n \ p) = n := by
+lemma Network.rm_not_in_supp (n : Network) (p : PName) : p ∉ supp n → (n \ p) = n := by
   -- Try it and have fun :D
-  sorry
+  intro hpnotinsupp
+  funext q
+  simp [Network.rm]
+  intro hpq
+  cases hpq
+  simp [supp] at hpnotinsupp
+  exact hpnotinsupp.symm
 
 -- Proposition 3.9 The order in which processes are removed does not matter
-lemma rm_comm (n : Network) (p q : PName) : ((n \ p) \ q) = ((n \ q) \ p):= by
+lemma Network.rm_comm (n : Network) (p q : PName) : ((n \ p) \ q) = ((n \ q) \ p):= by
   funext r
   simp [Network.rm]
   by_cases hqr : q = r
@@ -293,7 +301,7 @@ lemma rm_comm (n : Network) (p q : PName) : ((n \ p) \ q) = ((n \ q) \ p):= by
   . simp [hqr]
 
 -- (Not in the book) A very good property to have, process removal is distributive over parallel composition
-lemma rm_par_dist (n m : Network) (p : PName) : ((n |ₙ m) \ p) = ((n \ p) |ₙ (m \ p)) := by
+lemma Network.rm_par_dist (n m : Network) (p : PName) : ((n |ₙ m) \ p) = ((n \ p) |ₙ (m \ p)) := by
   funext r
   simp [Network.par, Network.rm]
   by_cases hpr : p = r
@@ -301,7 +309,7 @@ lemma rm_par_dist (n m : Network) (p : PName) : ((n |ₙ m) \ p) = ((n \ p) |ₙ
   . simp [hpr]
 
 -- Lemma 3.10
-lemma rm_unaffected_process (n₁ n₂ : Network) (tl : TransitionLabel) (r : PName):
+lemma Network.rm_unaffected_process (n₁ n₂ : Network) (tl : TransitionLabel) (r : PName):
   n₁ -[tl]ₙ-> n₂ → r ∉ tl.pn → (n₁ \ r) -[tl]ₙ-> (n₂ \ r):= by
   intro hnlts hnotin
   induction hnlts
@@ -331,3 +339,29 @@ lemma rm_unaffected_process (n₁ n₂ : Network) (tl : TransitionLabel) (r : PN
     rw [rm_par_dist m₂ m r]
     have hpar := @NLTS.par (m₁ \ r) tl (m₂ \ r) (m \ r) (ih hnotin)
     exact hpar
+
+-- A useful lemma that is not in the book
+lemma Network.ne_rm_par_disjoint (n : Network) (p q : PName) (pr1 pr2 : SimpleProc):
+  p ≠ q → ((n \ p) \ q).disjoint (p[pr1] |ₙ q[pr2]) := by
+  intro hpnotq
+  intro r
+  by_cases hrp : r = p
+  . simp [hrp]
+    simp [Network.rm, Network.atomic]
+  . by_cases hrq : r = q
+    . simp [hrq]
+      simp [Network.rm, Network.atomic]
+    . simp [Network.rm, Network.atomic, Network.par, Ne.symm hrp, Ne.symm hrq]
+
+-- Multiple step transition
+inductive NMST : Network → TransitionLabels → Network → Prop where
+  | refl :
+    NMST s (ε) s
+  | stepR :
+    NMST s ps s'' → s'' -[p]ₙ-> s' →
+    --------------------------------
+        NMST s (ps ∷ₜ p) s'
+syntax:30 (name := scNMST) term:30 " -[ " term:30 " ]ₙ->> " term:30 : term
+@[macro scNMST] def scNMSTImpl : Lean.Macro
+  | `($t1 -[ $t2 ]ₙ->> $t3) => `(NMST $t1 $t2 $t3)
+  | _ => Lean.Macro.throwUnsupported

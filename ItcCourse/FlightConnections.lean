@@ -237,10 +237,10 @@ inductive Walk : City → City → Nat → Prop where
 -- Example 1.2
 example : Walk .Odense .Sydney 2 := by
   apply @Walk.comp .Odense .Rome 1 .Sydney 1
-  apply Walk.dir
-  apply Conn.OR
-  apply Walk.dir
-  apply Conn.RS
+  . apply Walk.dir
+    exact Conn.OR
+  . apply Walk.dir
+    exact Conn.RS
 end FCW
 
 namespace StructuralInduction
